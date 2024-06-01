@@ -1,0 +1,6 @@
+Flask
+Flask-CORS
+fastai
+numpy
+pandas
+librosa
