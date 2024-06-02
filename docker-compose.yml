@@ -1,26 +1,26 @@
 version: '3.8'
 
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+  audio_frontend:
+    image: ghcr.io/ghost-love-you/audio_frontend:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      - audio-files:/app/audio_files
+    restart: always
+
+  audio_backend:
+    image: ghcr.io/ghost-love-you/audio_backend:latest
     ports:
       - "5000:5000"
     environment:
-      - FLASK_ENV=development  # 设置 Flask 环境变量（可选）
-    networks:
-      - app-network
+      - FLASK_ENV=production
+    volumes:
+      - audio-files:/app/audio_files
+    restart: always
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+volumes:
+  audio-files:

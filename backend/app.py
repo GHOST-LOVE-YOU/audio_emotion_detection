@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import librosa
 
-#|export
+# ******************************** 初始化模型 ******************************** #
 def _resnet_stem(*sizes):
     return [
         nn.Conv1d(sizes[i], sizes[i+1], kernel_size=3, stride = 2 if i==0 else 1)
@@ -59,12 +59,14 @@ class ResNet(nn.Sequential):
             for i in range(n_layers)
         ])
     
-#|export
+
+# ******************************** 加载模型 ******************************** #
 def get_x(r): return X[r]
 def get_y(r): return y_cat[r]
 learn_inf = load_learner('RES_896171.pkl')
 
-#|export
+
+# ******************************** 提取特征 ******************************** #
 def extract_features(data, sr=22050, frame_length=2048, hop_length=512):
     # 提取零交叉率（ZCR）特征
     zcr = librosa.feature.zero_crossing_rate(y=data, frame_length=frame_length, hop_length=hop_length)
@@ -82,7 +84,7 @@ def extract_features(data, sr=22050, frame_length=2048, hop_length=512):
 
     return features
 
-#|export
+# ******************************** 数据增强 ******************************** #
 def add_noise(data, noise_factor=0.005):
     noise = np.random.randn(len(data))
     augmented_data = data + noise_factor * noise
@@ -137,7 +139,8 @@ def process_file(data, target_duration=2.0, sr=22050):
 
     return augmented_features
 
-# 预测函数
+
+# ******************************** 预测情绪 ******************************** #
 def predict_emotion(data, sr=22050):
     augmented_features = process_file(data)
 
@@ -155,7 +158,7 @@ def predict_emotion(data, sr=22050):
         avg_probs = probs.mean(axis=0)
     return list(map(float, avg_probs.squeeze()))
 
-# 主处理函数
+# ******************************** 预测情绪 ******************************** #
 def process_and_classify_audio(file_path, step=0.1, target_duration=2.0, target_sr=22050):
     data, sr = librosa.load(file_path, sr=target_sr)
     total_duration = len(data) / sr
@@ -179,7 +182,7 @@ def process_and_classify_audio(file_path, step=0.1, target_duration=2.0, target_
     return results
 
 
-
+# ******************************** Flask ******************************** #
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -192,15 +195,17 @@ def hello():
     audioFilePath = data.get('audioFilePath')
     filename = audioFilePath.split('/')[-1]
     npmName = filename.split('.')[0]
+    
+    # 如果已经有stamp, 直接返回
     if os.path.exists(f'./stamp/{npmName}.npy'):
-        stamp = np.load(f'./stamp/{npmName}.npy')
-        return jsonify({stamp})
+        stamp = np.load(f'./stamp/{npmName}.npy').tolist()
     else:
         stamp = process_and_classify_audio(audioFilePath)
-        # 将stamp保存, 方便下次快速读取
-        stamp = np.array(stamp)
-        np.save(f'./stamp/{npmName}.npy', stamp)
-        return jsonify({stamp})
+        # 保存stamp
+        np.save(f'./stamp/{npmName}.npy', np.array(stamp))
+        stamp = stamp
+    
+    return jsonify({'stamp': stamp})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

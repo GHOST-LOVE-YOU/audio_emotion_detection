@@ -5,34 +5,48 @@ import { useState, useRef } from 'react';
 import { ChangeEvent } from 'react';
 
 const emotions = ['Angry', 'Disgusted', 'Fearful', 'Happy', 'Neutral', 'Sad', 'Surprised'];
-// const timeStamp = [[]]
-
 
 const VideoUpload = () => {
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [timeStamp, setTimeStamp] = useState<number[][]>([[]])
+  const [timeStamp, setTimeStamp] = useState<number[][]>([[]]);
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files ? event.target.files[0] : null;
     if (file) {
+      setLoading(true);
       const src = URL.createObjectURL(file);
       setVideoSrc(src);
-  
+
       const formData = new FormData();
       formData.append('file', file);
       formData.append('filename', file.name);
       formData.append('contentType', file.type);
-  
-      // 发送请求到后端API, 打印返回的信息, 没有返回就一直等待
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
-      const stamp = data.get('timeStamp')
-      setTimeStamp(stamp)
+
+      let response;
+      try {
+        response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+      } catch (error) {
+        console.error('Upload failed:', error);
+      }
+
+      if (response && response.ok) {
+        const data = await response.json();
+        const stamp = data.timeStamp;
+        setTimeStamp(stamp);
+        console.log(timeStamp);
+        setLoading(false);
+      } else {
+        console.error('Upload failed with status:', response?.status);
+        setVideoSrc(null);
+        setLoading(false);
+        alert('Upload failed, please try again.');
+      }
     }
   };
 
@@ -41,6 +55,14 @@ const VideoUpload = () => {
       setCurrentTime(parseFloat(videoRef.current.currentTime.toFixed(1)));
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-800">
+        <div className="text-white">Uploading, please wait...</div>
+      </div>
+    );
+  }
 
   // 如果没有上传视频, 展示一个简单的上传按钮
   if (!videoSrc) {
