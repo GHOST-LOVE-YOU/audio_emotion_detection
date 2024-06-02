@@ -23,8 +23,8 @@ kaggle开源数据集: [audio-emotions](https://www.kaggle.com/datasets/uldisval
 ![1717312352111.png](https://lsky.nezuko.me/i/2024/06/02/665c1b63676a8.png)
 ![1717312385423.png](https://lsky.nezuko.me/i/2024/06/02/665c1b85bb13f.png)
 
-## Docker一件部署界面
-**important!!! 该项目为大作业, 原作者不会更新和维护, 由于对优化docker大小不太熟悉, 把整个fastai包全部打包,总大小有10.2G, model也过拟合的厉害, 只是针对"特定场景"具有很好的效果, 实际应用价值并不大**
+## Docker一键部署界面
+**important!!! 该项目为课程作业, 原作者不会更新和维护, 由于对优化docker大小不太熟悉, 把整个fastai包全部打包,总大小有10.2G, model也过拟合的厉害, 只是针对"特定场景"具有很好的效果, 实际应用价值并不大**</br>
 docker和docker-compose的安装参考[官网](https://docs.docker.com/get-docker/)
 docker-compose.yml文件已在文件夹中
 ```
